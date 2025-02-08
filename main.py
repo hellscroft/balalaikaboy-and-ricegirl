@@ -174,6 +174,7 @@ def run_game(game, controller, level="level1"):
         if game.level_is_done(doors):
             completion_time = round(time.time() - start_time, 2)
             update_best_time(level, completion_time)
+
             show_win_screen(game, controller, completion_time)
 
         if controller.press_key(events, K_ESCAPE):

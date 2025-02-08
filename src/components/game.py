@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import *
 from src.config import Config
 import math
+import sqlite3
 
 
 class Game:
@@ -9,6 +10,8 @@ class Game:
         WINDOW_SIZE = (Config.WIDTH, Config.HEIGHT)
         self.screen = pygame.display.set_mode(WINDOW_SIZE, pygame.RESIZABLE)
         pygame.display.set_caption("BalalaikaBoy and RiceGirl")
+        self.best_times = self.get_best_times()
+
 
         CHUNK_SIZE = 32
         DISPLAY_SIZE = (34 * CHUNK_SIZE, 25 * CHUNK_SIZE)
@@ -27,7 +30,23 @@ class Game:
         right_cords = (785, 450)
         self.display.blit(level_select.left_player, left_cords)
         self.display.blit(level_select.right_player, right_cords)
+        font = pygame.font.Font('data/assets/Minecraft.ttf', 32)
 
+        lines = [
+            f"BEST TIME: "
+            f"LEVEL 1: {self.best_times['level1'] if self.best_times['level1'] else 'N/A'},",
+            f"LEVEL 2: {self.best_times['level2'] if self.best_times['level2'] else 'N/A'},   "
+            f"LEVEL 3: {self.best_times['level3'] if self.best_times['level3'] else 'N/A'}"
+        ]
+
+        y_offset = 150
+        x_offset = 320
+
+        for line in lines:
+            text = font.render(line, True, (255, 255, 255))
+            self.display.blit(text, (x_offset, y_offset))
+            y_offset += 60
+            x_offset -= 50
     def user_select_level(self, level_select, controller):
         level_index = 0
         level_dict = {
@@ -216,3 +235,17 @@ class Game:
         t = pygame.time.get_ticks() / 2 % time
         y = math.sin(t / speed) * how_far + overall_y
         return int(y)
+
+    @staticmethod
+    def get_best_times():
+        conn = sqlite3.connect('data/assets/best_time.db')
+        cursor = conn.cursor()
+
+        best_times = {}
+        for level in ['level1', 'level2', 'level3']:
+            cursor.execute('SELECT time FROM bt WHERE level = ?', (level,))
+            result = cursor.fetchone()
+            best_times[level] = result[0] if result else None
+
+        conn.close()
+        return best_times
